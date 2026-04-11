@@ -1,0 +1,40 @@
+# Experiment Metadata
+exp_dir: "./experiments-v2/"
+resume: false
+
+# Environment Parameters
+env:
+  name: "walker"
+  task: "walk"
+  action_repeat: 2
+  action_dim: 6
+  height: 64
+  width: 64
+
+# Model Architecture
+model:
+  hidden_dim: 200
+  z_dim: 30
+  num_ffn_layers: 3
+  discount_factor: 0.99
+
+# Training Hyperparameters
+train:
+  batch_size: 50
+  seq_length: 50
+  imagination_horizon: 15
+  dynamics_model_lr: 0.0006
+  action_model_lr: 0.00008
+  value_model_lr: 0.00008
+  beta: 1.0
+  gamma: 0.99
+  lambda_: 0.95
+  max_steps: 1000
+  collect_interval: 100
+  num_seed_episodes: 5
+  exploration_noise_scale: 0.3
+  checkpoint_save_interval: 10
+  free_nats: 3.0
+
+# Compute
+device: "auto" # "cuda", "cpu", or "auto"
