@@ -87,10 +87,10 @@ def train_dreamer(config):
             rewards_imag = dreamer.reward_model(latents).reshape(-1, config.train.imagination_horizon + 1, 1)
             values_imag = dreamer.value_model(latents).reshape(-1, config.train.imagination_horizon + 1, 1)
             
-            lambda_vals = compute_lambda_value(rewards_imag[:, 1:], values_imag[:, 1:], l=config.train.lambda_)
+            lambda_vals = compute_lambda_value(rewards_imag[:, 1:], values_imag[:, 1:].detach(), l=config.train.lambda_)
             
             act_loss = -torch.mean(lambda_vals)
-            val_loss = 0.5 * torch.mean((lambda_vals.detach() - values_imag[:, :-1])**2)
+            val_loss = 0.5 * torch.mean((lambda_vals.detach() - values_imag[:, 1:])**2)
             
             act_opt.zero_grad()
             val_opt.zero_grad()
@@ -118,7 +118,7 @@ def train_dreamer(config):
             
             obs_list, act_list, rew_list, cont_list = [], [], [], []
             while not step.last():
-                o = torch.from_numpy(step.observation['pixels']).permute(2,0,1).unsqueeze(0).to(config.device).float() / 255.0
+                o = torch.from_numpy(step.observation['pixels']).permute(2,0,1).unsqueeze(0).to(config.device).float()
                 obs_list.append(step.observation['pixels'])
                 
                 h, z = dreamer.rssm(h=h, z=z, action=a, obs=dreamer.encoder(o))
