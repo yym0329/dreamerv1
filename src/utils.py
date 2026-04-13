@@ -2,6 +2,7 @@ import os
 import random
 import numpy as np
 import torch
+from types import SimpleNamespace
 from tqdm import tqdm
 from src.envs import init_env
 
@@ -12,32 +13,41 @@ def set_seed(seed):
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
 
+def dict_to_namespace(d):
+    if isinstance(d, dict):
+        return SimpleNamespace(**{k: dict_to_namespace(v) for k, v in d.items()})
+    return d
+
+def namespace_to_dict(ns):
+    if isinstance(ns, SimpleNamespace):
+        return {k: namespace_to_dict(v) for k, v in vars(ns).items()}
+    if isinstance(ns, torch.device):
+        return str(ns)
+    return ns
+
 def create_trajectory(env_name, task_name, action_dim, action_repeat, seed):
     env = init_env(env_name, task_name, seed=seed)
     action_spec = env.action_spec()
     step = env.reset()
-    actions = [np.zeros(action_dim)]
-    observations = [step.observation['pixels']]
-    rewards = [0.0]
-    continuations = [1.0]
+    obs_list, act_list, rew_list, cont_list = [], [], [], []
 
     while not step.last():
+        obs_list.append(step.observation['pixels'])
         action = np.random.uniform(action_spec.minimum, action_spec.maximum)
         total_rew = 0.0
         for _ in range(action_repeat):
             step = env.step(action)
             total_rew += step.reward
             if step.last(): break
-        actions.append(action)
-        observations.append(step.observation['pixels'])
-        rewards.append(total_rew)
-        continuations.append(step.discount)
+        act_list.append(action)
+        rew_list.append(total_rew)
+        cont_list.append(step.discount)
 
     return {
-        'observation': np.array(observations),
-        'action': np.array(actions),
-        'reward': np.array(rewards),
-        'continuation': np.array(continuations)
+        'observation': np.array(obs_list),
+        'action': np.array(act_list),
+        'reward': np.array(rew_list),
+        'continuation': np.array(cont_list)
     }
 
 def save_episodes(save_dir, num_episodes, env_name, task_name, action_dim, action_repeat, base_seed):
