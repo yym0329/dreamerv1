@@ -8,13 +8,8 @@ import traceback
 import yaml
 import torch
 from pathlib import Path
-from types import SimpleNamespace
 from src.trainer import train_dreamer
-
-def dict_to_namespace(d):
-    if isinstance(d, dict):
-        return SimpleNamespace(**{k: dict_to_namespace(v) for k, v in d.items()})
-    return d
+from src.utils import dict_to_namespace
 
 def main():
     parser = argparse.ArgumentParser(description="DreamerV1 serial seed sweep")

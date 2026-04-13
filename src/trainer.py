@@ -2,11 +2,13 @@ import os
 import torch
 import numpy as np
 import wandb
+import yaml
 from tqdm import tqdm
 from pathlib import Path
 from src.models import Dreamer
-from src.utils import save_episodes, load_episodes, sample_batch, compute_lambda_value, set_seed
+from src.utils import save_episodes, load_episodes, sample_batch, compute_lambda_value, set_seed, namespace_to_dict
 from src.envs import init_env
+from src.viz import visualize
 
 def train_dreamer(config):
     seed = getattr(config, 'seed', 0)
@@ -17,6 +19,11 @@ def train_dreamer(config):
     dataset_dir = exp_dir / 'dataset'
     ckpt_dir.mkdir(parents=True, exist_ok=True)
     dataset_dir.mkdir(parents=True, exist_ok=True)
+
+    config_path = exp_dir / 'config.yaml'
+    if not config_path.exists():
+        with open(config_path, 'w') as f:
+            yaml.safe_dump(namespace_to_dict(config), f, default_flow_style=False, sort_keys=False)
 
     if not any(dataset_dir.iterdir()):
         save_episodes(dataset_dir, config.train.num_seed_episodes, config.env.name, config.env.task, config.env.action_dim, config.env.action_repeat, base_seed=seed + 1)
@@ -155,3 +162,26 @@ def train_dreamer(config):
                 'num_interactions': step_idx,
                 'wandb_run_id': wandb.run.id
             }, ckpt_dir / f'{step_idx}_dreamer.pt')
+
+        # Visualization
+        viz_interval = getattr(config.train, 'viz_interval', 0)
+        if viz_interval and step_idx % viz_interval == 0:
+            try:
+                viz_out = visualize(
+                    dreamer, env, config,
+                    warmup=5, imagine_steps=45, fps=10,
+                    output_dir=exp_dir / 'viz' / f'step_{step_idx}',
+                    real_max_steps=200,
+                    noise_scale=0.0,
+                )
+                real_video = np.stack(viz_out['real_frames_u8']).transpose(0, 3, 1, 2)
+                imag_video = np.stack(viz_out['imagined_frames_u8']).transpose(0, 3, 1, 2)
+                wandb.log({
+                    'viz/real': wandb.Video(real_video, fps=10, format='gif'),
+                    'viz/imagined': wandb.Video(imag_video, fps=10, format='gif'),
+                    'viz/warmup_mse': viz_out['warmup_mse'],
+                    'viz/imagine_mse': viz_out['imagine_mse'],
+                    'viz/episode_return': viz_out['episode_return'],
+                })
+            except Exception as e:
+                print(f"[viz] skipping visualization at step {step_idx}: {e}")
