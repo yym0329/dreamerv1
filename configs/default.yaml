@@ -1,5 +1,5 @@
 # Experiment Metadata
-exp_dir: "./experiments-v2/"
+exp_dir: "./experiments/experiments-v4/"
 resume: false
 
 # Environment Parameters
@@ -29,7 +29,7 @@ train:
   beta: 1.0
   gamma: 0.99
   lambda_: 0.95
-  max_steps: 1000
+  max_steps: 2300
   collect_interval: 100
   num_seed_episodes: 5
   exploration_noise_scale: 0.3
