@@ -103,7 +103,7 @@ def train_dreamer(config):
             
             torch.nn.utils.clip_grad_norm_(dreamer.get_action_model_parameters(), 100)
             torch.nn.utils.clip_grad_norm_(dreamer.get_value_model_parameters(), 100)
-            
+            torch.nn.utils.clip_grad_norm_(dreamer.get_dynamics_model_parameters(), 100)
             act_opt.step()
             val_opt.step()
             
@@ -121,7 +121,8 @@ def train_dreamer(config):
             
             obs_list, act_list, rew_list, cont_list = [], [], [], []
             while not step.last():
-                o = torch.from_numpy(step.observation['pixels']).permute(2,0,1).unsqueeze(0).to(config.device).float()
+                o = torch.from_numpy(
+                    step.observation['pixels']).permute(2,0,1).unsqueeze(0).to(config.device).float()
                 obs_list.append(step.observation['pixels'])
                 
                 h, z = dreamer.rssm(h=h, z=z, action=a, obs=dreamer.encoder(o))
