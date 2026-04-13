@@ -34,6 +34,7 @@ train:
   num_seed_episodes: 2
   exploration_noise_scale: 0.3
   checkpoint_save_interval: 1
+  free_nats: 3.0
 
 # Compute
 device: "cpu" # Force CPU for smoketest to avoid CUDA init overhead if unnecessary
