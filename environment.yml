@@ -1,0 +1,15 @@
+name: dreamer
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip
+  - pip:
+      - dm_control
+      - mujoco
+      - wandb
+      - tqdm
+      - torch
+      - numpy
+      - pyyaml
+      - imageio
