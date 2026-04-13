@@ -1,5 +1,6 @@
 import os
 os.environ['MUJOCO_GL'] = 'egl'
+os.environ['PYOPENGL_PLATFORM'] = 'egl'
 
 import argparse
 import yaml
