@@ -1,11 +1,19 @@
 import os
+import random
 import numpy as np
 import torch
 from tqdm import tqdm
 from src.envs import init_env
 
-def create_trajectory(env_name, task_name, action_dim, action_repeat):
-    env = init_env(env_name, task_name)
+def set_seed(seed):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+
+def create_trajectory(env_name, task_name, action_dim, action_repeat, seed):
+    env = init_env(env_name, task_name, seed=seed)
     action_spec = env.action_spec()
     step = env.reset()
     actions = [np.zeros(action_dim)]
@@ -32,10 +40,10 @@ def create_trajectory(env_name, task_name, action_dim, action_repeat):
         'continuation': np.array(continuations)
     }
 
-def save_episodes(save_dir, num_episodes, env_name, task_name, action_dim, action_repeat):
+def save_episodes(save_dir, num_episodes, env_name, task_name, action_dim, action_repeat, base_seed):
     os.makedirs(save_dir, exist_ok=True)
     for i in tqdm(range(num_episodes), desc="generating episodes"):
-        episode = create_trajectory(env_name, task_name, action_dim, action_repeat)
+        episode = create_trajectory(env_name, task_name, action_dim, action_repeat, seed=base_seed + i)
         np.savez(os.path.join(save_dir, f'seed_{i}.npz'), **episode)
 
 def load_episodes(episode_dir):

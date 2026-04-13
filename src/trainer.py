@@ -5,10 +5,13 @@ import wandb
 from tqdm import tqdm
 from pathlib import Path
 from src.models import Dreamer
-from src.utils import save_episodes, load_episodes, sample_batch, compute_lambda_value
+from src.utils import save_episodes, load_episodes, sample_batch, compute_lambda_value, set_seed
 from src.envs import init_env
 
 def train_dreamer(config):
+    seed = getattr(config, 'seed', 0)
+    set_seed(seed)
+
     exp_dir = Path(config.exp_dir)
     ckpt_dir = exp_dir / 'checkpoints'
     dataset_dir = exp_dir / 'dataset'
@@ -16,10 +19,10 @@ def train_dreamer(config):
     dataset_dir.mkdir(parents=True, exist_ok=True)
 
     if not any(dataset_dir.iterdir()):
-        save_episodes(dataset_dir, config.train.num_seed_episodes, config.env.name, config.env.task, config.env.action_dim, config.env.action_repeat)
-    
+        save_episodes(dataset_dir, config.train.num_seed_episodes, config.env.name, config.env.task, config.env.action_dim, config.env.action_repeat, base_seed=seed + 1)
+
     episodes = load_episodes(dataset_dir)
-    env = init_env(config.env.name, config.env.task)
+    env = init_env(config.env.name, config.env.task, seed=seed)
     action_bound_min = torch.from_numpy(env.action_spec().minimum.copy()).to(config.device).float()
     action_bound_max = torch.from_numpy(env.action_spec().maximum.copy()).to(config.device).float()
 

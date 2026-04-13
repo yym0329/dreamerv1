@@ -24,8 +24,8 @@ class NormalizeWrapper:
     def last(self):
         return self.env.last()
 
-def init_env(env_name, task_name, height=64, width=64, camera_id=0):
-    env = suite.load(env_name, task_name, task_kwargs={'random': 42})
+def init_env(env_name, task_name, height=64, width=64, camera_id=0, seed=42):
+    env = suite.load(env_name, task_name, task_kwargs={'random': seed})
     env = pixels.Wrapper(env, render_kwargs={'height': height, 'width': width, 'camera_id': camera_id})
     env = NormalizeWrapper(env)
     return env
