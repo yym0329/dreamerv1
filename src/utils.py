@@ -4,7 +4,7 @@ import torch
 from tqdm import tqdm
 from src.envs import init_env
 
-def create_trajectory(env_name, task_name, action_dim):
+def create_trajectory(env_name, task_name, action_dim, action_repeat):
     env = init_env(env_name, task_name)
     action_spec = env.action_spec()
     step = env.reset()
@@ -15,10 +15,14 @@ def create_trajectory(env_name, task_name, action_dim):
 
     while not step.last():
         action = np.random.uniform(action_spec.minimum, action_spec.maximum)
-        step = env.step(action)
+        total_rew = 0.0
+        for _ in range(action_repeat):
+            step = env.step(action)
+            total_rew += step.reward
+            if step.last(): break
         actions.append(action)
         observations.append(step.observation['pixels'])
-        rewards.append(step.reward)
+        rewards.append(total_rew)
         continuations.append(step.discount)
 
     return {
@@ -28,10 +32,10 @@ def create_trajectory(env_name, task_name, action_dim):
         'continuation': np.array(continuations)
     }
 
-def save_episodes(save_dir, num_episodes, env_name, task_name, action_dim):
+def save_episodes(save_dir, num_episodes, env_name, task_name, action_dim, action_repeat):
     os.makedirs(save_dir, exist_ok=True)
     for i in tqdm(range(num_episodes), desc="generating episodes"):
-        episode = create_trajectory(env_name, task_name, action_dim)
+        episode = create_trajectory(env_name, task_name, action_dim, action_repeat)
         np.savez(os.path.join(save_dir, f'seed_{i}.npz'), **episode)
 
 def load_episodes(episode_dir):

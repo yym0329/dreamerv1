@@ -16,7 +16,7 @@ def train_dreamer(config):
     dataset_dir.mkdir(parents=True, exist_ok=True)
 
     if not any(dataset_dir.iterdir()):
-        save_episodes(dataset_dir, config.train.num_seed_episodes, config.env.name, config.env.task, config.env.action_dim)
+        save_episodes(dataset_dir, config.train.num_seed_episodes, config.env.name, config.env.task, config.env.action_dim, config.env.action_repeat)
     
     episodes = load_episodes(dataset_dir)
     env = init_env(config.env.name, config.env.task)
